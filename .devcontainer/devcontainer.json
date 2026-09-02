@@ -1,7 +1,7 @@
 {
   "name": "Vue3-WebDev-Kit",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:22",
-  "workspaceFolder": "/workspaces/Vue3-WebDev-Kit/",
+  "workspaceFolder": "/workspaces/Vue3-WebDev-F26/",
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {},
     "ghcr.io/devcontainers/features/desktop-lite:1": {

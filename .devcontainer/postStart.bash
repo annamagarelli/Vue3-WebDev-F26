@@ -1,7 +1,7 @@
 # Run the webserver.
 setsid --fork python3 \
   -m http.server 8000 \
-  --directory /workspaces/Vue3-WebDev-Kit/ \
+  --directory /workspaces/Vue3-WebDev-F26/ \
   > /dev/null 2>&1
 
 # Run the JSON server.
