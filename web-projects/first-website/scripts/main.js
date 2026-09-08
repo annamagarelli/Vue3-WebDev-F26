@@ -11,12 +11,6 @@ myImage.addEventListener('click', () => {
 let myButton = document.querySelector('button');
 let myHeading = document.querySelector('h1');
 
-if (!localStorage.getItem('name')) {
-  setUserName();
-} else {
-  const storedName = localStorage.getItem('name');
-  myHeading.textContent = `Tomatoes are totally terrific, ${storedName}`;
-}
 function setUserName() {
   const myName = prompt('Please enter your name.');
   if (!myName) {
@@ -24,6 +18,12 @@ function setUserName() {
   } else {
     localStorage.setItem('name', myName);
     myHeading.textContent = `Tomatoes are totally terrific, ${myName}`;
+  }
+  if (!localStorage.getItem('name')) {
+    setUserName();
+  } else {
+    const storedName = localStorage.getItem('name');
+    myHeading.textContent = `Tomatoes are totally terrific, ${storedName}`;
   }
 }
 myButton.addEventListener('click', () => {
