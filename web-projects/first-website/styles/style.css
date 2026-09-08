@@ -27,3 +27,12 @@ body {
   padding: 0 20px 20px 20px;
   border: 5px solid rgb(184, 19, 19);
 }
+img {
+  display: block;
+  margin: 0 auto;
+  max-width: 100%;
+}
+.done {
+  color: rgb(43, 87, 43);
+  text-decoration: line-through solid black 2px;
+}
