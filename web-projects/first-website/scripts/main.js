@@ -8,8 +8,10 @@ myImage.addEventListener('click', () => {
     myImage.setAttribute('src', 'images/Tomato.png');
   }
 });
+
 let myButton = document.querySelector('button');
 let myHeading = document.querySelector('h1');
+
 function setUserName() {
   const myName = prompt('Please enter your name.');
   localStorage.setItem('name', myName);
