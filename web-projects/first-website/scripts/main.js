@@ -16,13 +16,14 @@ function setUserName() {
   const myName = prompt('Please enter your name.');
   localStorage.setItem('name', myName);
   myHeading.textContent = `Tomato is cool, ${myName}`;
+  if (!localStorage.getItem('name')) {
+    setUserName();
+  } else {
+    const storedName = localStorage.getItem('name');
+    myHeading.textContent = `Tomato is cool, ${storedName}`;
+  }
 }
-if (!localStorage.getItem('name')) {
-  setUserName();
-} else {
-  const storedName = localStorage.getItem('name');
-  myHeading.textContent = `Tomato is cool, ${storedName}`;
-}
+
 myButton.addEventListener('click', () => {
   setUserName();
 });
