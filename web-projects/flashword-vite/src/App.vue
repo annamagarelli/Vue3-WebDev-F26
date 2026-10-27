@@ -8,25 +8,26 @@ export default {
   data() {
     return {
       words: [
-        {
-          word_a: 'hola',
-          word_b: 'hello',
-          hint: 'greeting',
-        },
-        {
-          word_a: 'uno',
-          word_b: 'one',
-          hint: 'number',
-        },
-        {
-          word_a: 'gris',
-          word_b: 'grey',
-          hint: 'color',
-        },
+        // {
+        //   word_a: 'hola',
+        //   word_b: 'hello',
+        //   hint: 'greeting',
+        // },
+        // {
+        //   word_a: 'uno',
+        //   word_b: 'one',
+        //   hint: 'number',
+        // },
+        // {
+        //   word_a: 'gris',
+        //   word_b: 'grey',
+        //   hint: 'color',
+        // },
       ],
       correctCount: 0,
       completed: false,
       resetKey: 0,
+      error: false,
     };
   },
   computed: {
@@ -52,13 +53,55 @@ export default {
       this.resetKey++;
     },
   },
+  async created() {
+    try {
+      let response = await fetch('/api/animals');
+      if (!response.ok) {
+        throw new Error('Server response not ok. Status: ' + response.status);
+      }
+      this.words = await response.json();
+    } catch (error) {
+      console.error('Error: Unable to fetch words. ', error);
+      this.error = true;
+      //make error variable to display error message in UI
+    }
+  },
 };
 </script>
 
 <template>
   <div id="app" v-cloak>
-    <h2 data-cy="app-header">FlashWord</h2>
+    <p v-if="error" data-cy="error" id="error">
+      Error: Unable to fetch words from the server. Please try again later.
+    </p>
+    <div v-else>
+      <h2 data-cy="app-header">FlashWord</h2>
+      <p v-if="completed" data-cy="completed" id="completed">
+        Great work, you have completed all the words!
+      </p>
+      <p v-else data-cy="correct-count" id="correctCount">
+        You have answered
+        <span data-cy="num-correct">{{ correctCount }}</span> /
+        <span data-cy="total-words">{{ wordCount }}</span>
+      </p>
+      <button data-cy="reset" type="button" v-on:click="resetGame">
+        Reset game
+      </button>
 
+      <div id="cards">
+        <WordCard
+          v-for="word in shuffledWords"
+          v-bind:data-cy="word.word_a + '-card'"
+          v-bind:key="word.word_a + resetKey"
+          v-bind:word="word"
+          v-on:incrementCorrectCount="incrementCorrectCount"
+        >
+        </WordCard>
+      </div>
+    </div>
+  </div>
+
+  <!-- <h2 data-cy="app-header">FlashWord</h2>
     <p v-if="completed" data-cy="completed" id="completed">
       Great work, you have completed all the words!
     </p>
@@ -80,7 +123,7 @@ export default {
       >
       </WordCard>
     </div>
-  </div>
+  </div> -->
 </template>
 
 <style scoped>
