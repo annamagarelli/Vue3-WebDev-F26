@@ -55,7 +55,7 @@ export default {
   },
   async created() {
     try {
-      let response = await fetch('/api/animals');
+      let response = await fetch('/api/words');
       if (!response.ok) {
         throw new Error('Server response not ok. Status: ' + response.status);
       }

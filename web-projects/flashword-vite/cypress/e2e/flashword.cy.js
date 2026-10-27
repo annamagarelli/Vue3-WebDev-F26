@@ -116,4 +116,49 @@ describe('FlashWord Tests', () => {
       .find('[data-cy="translation"]')
       .should('have.value', '');
   });
+
+  it('Displays an error when loading the words fails with HTTP error', () => {
+    cy.intercept('GET', '**/api/**', {
+      statusCode: 500,
+      body: { message: 'Unable to load words' },
+    }).as('getWordsError');
+
+    cy.visit('http://localhost:5173/');
+
+    cy.wait('@getWordsError');
+    cy.get('[data-cy="error"]')
+      .should('be.visible')
+      .and('contain.text', 'Error: Unable to fetch words');
+    cy.get('[data-cy="app-header"]').should('not.exist');
+  });
+
+  it('Displays an error when loading the words fails with a network error', () => {
+    cy.intercept('GET', '**/api/**', {
+      forceNetworkError: true,
+    }).as('getWordsNetworkError');
+
+    cy.visit('http://localhost:5173/');
+
+    cy.wait('@getWordsNetworkError');
+    cy.get('[data-cy="error"]')
+      .should('be.visible')
+      .and('contain.text', 'Error: Unable to fetch words');
+    cy.get('[data-cy="app-header"]').should('not.exist');
+  });
+
+  it('Displays an error when loading the words fails with a parsing error', () => {
+    cy.intercept('GET', '**/api/**', {
+      statusCode: 200,
+      headers: { 'content-type': 'application/json' },
+      body: '{invalid-json',
+    }).as('getWordsParsingError');
+
+    cy.visit('http://localhost:5173/');
+
+    cy.wait('@getWordsParsingError');
+    cy.get('[data-cy="error"]')
+      .should('be.visible')
+      .and('contain.text', 'Error: Unable to fetch words');
+    cy.get('[data-cy="app-header"]').should('not.exist');
+  });
 });
