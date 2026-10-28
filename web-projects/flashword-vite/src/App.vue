@@ -28,6 +28,12 @@ export default {
       completed: false,
       resetKey: 0,
       error: false,
+      playerName: '',
+      leaderboard: [],
+      leaderboardError: '',
+      scoreSubmitted: false,
+      startedAt: Date.now(),
+      completedAt: null,
     };
   },
   computed: {
@@ -40,7 +46,10 @@ export default {
   },
   watch: {
     correctCount() {
-      this.completed = this.correctCount == this.wordCount;
+      if (this.wordCount > 0 && this.correctCount === this.wordCount) {
+        this.completed = true;
+        this.completedAt = Date.now();
+      }
     },
   },
   methods: {
@@ -50,8 +59,68 @@ export default {
     resetGame() {
       this.correctCount = 0;
       this.completed = false;
+      this.completedAt = null;
+      this.scoreSubmitted = false;
+      this.playerName = '';
+      this.startedAt = Date.now();
       this.resetKey++;
     },
+    loadLeaderboard() {
+      try {
+        const stored = JSON.parse(
+          localStorage.getItem('flashword-leaderboard') || '[]'
+        );
+        this.leaderboard = Array.isArray(stored)
+          ? this.sortLeaderboard(stored)
+          : [];
+      } catch (error) {
+        this.leaderboard = [];
+        this.leaderboardError = 'Unable to load leaderboard scores.';
+      }
+    },
+    sortLeaderboard(entries) {
+      return [...entries].sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        if (a.completedInSeconds !== b.completedInSeconds) {
+          return a.completedInSeconds - b.completedInSeconds;
+        }
+        return a.submittedAt - b.submittedAt;
+      });
+    },
+    submitScore() {
+      const name = this.playerName.trim();
+      if (!name || name.length > 20) {
+        this.leaderboardError = 'Enter a name between 1 and 20 characters.';
+        return;
+      }
+      if (this.scoreSubmitted) return;
+
+      const entry = {
+        name,
+        score: this.correctCount,
+        totalWords: this.wordCount,
+        completedInSeconds: Math.max(
+          1,
+          Math.round((this.completedAt - this.startedAt) / 1000)
+        ),
+        submittedAt: Date.now(),
+      };
+
+      try {
+        this.leaderboard = this.sortLeaderboard([...this.leaderboard, entry]);
+        localStorage.setItem(
+          'flashword-leaderboard',
+          JSON.stringify(this.leaderboard)
+        );
+        this.scoreSubmitted = true;
+        this.leaderboardError = '';
+      } catch (error) {
+        this.leaderboardError = 'Unable to save your score.';
+      }
+    },
+  },
+  mounted() {
+    this.loadLeaderboard();
   },
   async created() {
     try {
@@ -98,6 +167,52 @@ export default {
         >
         </WordCard>
       </div>
+
+      <section v-if="completed" data-cy="score-form" id="score-form">
+        <h3>Submit your score</h3>
+        <label for="player-name">Player name</label>
+        <input
+          id="player-name"
+          data-cy="player-name"
+          v-model="playerName"
+          type="text"
+          maxlength="20"
+          placeholder="Your name"
+          v-on:keyup.enter="submitScore"
+        />
+        <button
+          data-cy="submit-score"
+          type="button"
+          v-bind:disabled="scoreSubmitted"
+          v-on:click="submitScore"
+        >
+          {{ scoreSubmitted ? 'Score submitted' : 'Submit score' }}
+        </button>
+      </section>
+
+      <section data-cy="leaderboard" id="leaderboard">
+        <h3>Leaderboard</h3>
+        <p v-if="leaderboardError" data-cy="leaderboard-error" role="alert">
+          {{ leaderboardError }}
+        </p>
+        <p v-if="leaderboard.length === 0" data-cy="leaderboard-empty">
+          No scores yet. Be the first to play!
+        </p>
+        <ol v-else>
+          <li
+            v-for="(entry, index) in leaderboard"
+            v-bind:key="entry.submittedAt + '-' + entry.name"
+            data-cy="leaderboard-row"
+          >
+            <span class="leaderboard-rank">{{ index + 1 }}</span>
+            <span data-cy="leaderboard-name" class="leaderboard-name">{{
+              entry.name
+            }}</span>
+            <span data-cy="leaderboard-score">{{ entry.score }}/{{ entry.totalWords }}</span>
+            <span data-cy="leaderboard-time">{{ entry.completedInSeconds }}s</span>
+          </li>
+        </ol>
+      </section>
     </div>
   </div>
 
@@ -152,6 +267,52 @@ export default {
   margin: 10px;
   font-weight: bold;
   padding: 10px;
+}
+
+#score-form,
+#leaderboard {
+  max-width: 640px;
+  margin: 24px auto;
+}
+
+#score-form {
+  display: grid;
+  grid-template-columns: auto auto auto;
+  gap: 10px;
+  align-items: center;
+}
+
+#score-form h3 {
+  grid-column: 1 / -1;
+}
+
+#score-form label {
+  font-weight: bold;
+}
+
+#leaderboard ol {
+  padding: 0;
+  list-style: none;
+}
+
+#leaderboard li {
+  display: grid;
+  grid-template-columns: 50px 1fr auto auto;
+  gap: 16px;
+  align-items: center;
+  margin: 8px 0;
+  padding: 12px;
+  border-radius: 5px;
+  background-color: #e8f0ff;
+}
+
+.leaderboard-name {
+  font-weight: bold;
+  text-align: left;
+}
+
+.leaderboard-rank {
+  font-weight: bold;
 }
 
 #completed {

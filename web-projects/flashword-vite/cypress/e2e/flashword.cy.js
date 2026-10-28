@@ -1,4 +1,8 @@
 describe('FlashWord Tests', () => {
+  beforeEach(() => {
+    cy.clearLocalStorage();
+  });
+
   it('Check initial page state', () => {
     cy.visit('http://localhost:5173/');
 
@@ -146,6 +150,40 @@ describe('FlashWord Tests', () => {
     cy.get('[data-cy="app-header"]').should('not.exist');
   });
 
+  it('Displays an empty leaderboard and validates submitted names', () => {
+    cy.visit('http://localhost:5173/');
+
+    cy.get('[data-cy="leaderboard"]').should('be.visible');
+    cy.get('[data-cy="leaderboard-empty"]').should(
+      'contain.text',
+      'No scores yet'
+    );
+
+    completeGame();
+    cy.get('[data-cy="player-name"]').clear();
+    cy.get('[data-cy="submit-score"]').click();
+    cy.get('[data-cy="leaderboard-error"]').should(
+      'contain.text',
+      'Enter a name'
+    );
+  });
+
+  it('Submits and persists a leaderboard score without duplicates', () => {
+    cy.visit('http://localhost:5173/');
+    completeGame();
+
+    cy.get('[data-cy="player-name"]').type('Ada');
+    cy.get('[data-cy="submit-score"]').click();
+    cy.get('[data-cy="leaderboard-row"]').should('have.length', 1);
+    cy.get('[data-cy="leaderboard-row"]')
+      .should('contain.text', 'Ada')
+      .and('contain.text', '3/3');
+    cy.get('[data-cy="submit-score"]').should('be.disabled');
+
+    cy.reload();
+    cy.get('[data-cy="leaderboard-row"]').should('have.length', 1);
+  });
+
   it('Displays an error when loading the words fails with a parsing error', () => {
     cy.intercept('GET', '**/api/**', {
       statusCode: 200,
@@ -162,3 +200,15 @@ describe('FlashWord Tests', () => {
     cy.get('[data-cy="app-header"]').should('not.exist');
   });
 });
+
+function completeGame() {
+  cy.get('[data-cy="hola-card"]')
+    .find('[data-cy="translation"]')
+    .type('hello{enter}');
+  cy.get('[data-cy="uno-card"]')
+    .find('[data-cy="translation"]')
+    .type('one{enter}');
+  cy.get('[data-cy="gris-card"]')
+    .find('[data-cy="translation"]')
+    .type('grey{enter}');
+}
